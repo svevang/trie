@@ -1,11 +1,13 @@
 # Trie
 
-**TODO: Add description**
+A pointerless implementation of a Trie. Keys are appended to a binary
+tree backed by block-based persistent storage. Initial support will
+include trie creation, deletion and reads.
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `trie` to your list of dependencies in `mix.exs`:
+The package can be installed by adding `trie` to your list of
+dependencies in `mix.exs`:
 
 ```elixir
 def deps do
