@@ -15,27 +15,31 @@ defmodule Trie do
     do_from_key(input_key)
   end
 
-  def do_from_key(input_key, acc \\ [])
+  def do_from_key(input_key, acc \\ <<>>)
 
   # done recursing
   def do_from_key(input_key, acc) when bit_size(input_key) == 0 do
-    Enum.reverse(acc)
+    acc
   end
 
   def do_from_key(input_key, acc) do
     <<target_bit::size(1), rest::bitstring>> = input_key
 
     acc = case target_bit do
-      1 -> [right_branch | acc]
-      0 -> [left_branch | acc]
+      1 -> << acc::bitstring, Trie.right_branch::bitstring >>
+      0 -> << acc::bitstring, Trie.left_branch::bitstring >>
     end
 
     do_from_key(rest, acc)
   end
 
   def as_list(trie) do
-    trie
-    |> Enum.map(fn(bits)-> for <<b :: 1 <- bits  >>, do: b end)
+    (for <<b :: 2 <- trie  >>, do: b)
+    |> Enum.map(fn(node) ->
+      <<lhs::size(1), rhs::size(1)>> = <<node::size(2)>>
+      [lhs, rhs]
+    end)
+
   end
 
   def left_branch do

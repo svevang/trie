@@ -21,9 +21,6 @@ defmodule Trie.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:rustler, "~> 0.16.0"},
-      {:gettext, git: "https://github.com/svevang/unicode_explorer.git", tag: "0.1"}
-
     ]
   end
 end

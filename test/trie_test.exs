@@ -2,7 +2,7 @@ defmodule TrieTest do
   use ExUnit.Case
   doctest Trie
 
-  describe "from_keye/1" do
+  describe "from_key/1" do
     test "Sets up a new trie" do
       a_byte = <<97>>
       assert (Trie.from_key(a_byte) |> Trie.as_list) == [[1, 0], [0, 1], [0, 1], [1, 0], [1, 0], [1, 0], [1, 0], [0, 1]]
