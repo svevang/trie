@@ -3,6 +3,18 @@ defmodule Trie do
   Trie CRUD.
   """
 
+  @node_bit_size 2
+
+  #def merge(trie, key) do
+    #root_level = 1
+    #do_merge(trie, key, root_level, ast)
+  #end
+
+  #def find_bifurcation(trie, key, curr_level, last) do
+    #leaf_level = length(key) + 1
+  #end
+
+
   @doc """
   Given an Elixir binary, return a trie representation whose bits are edges in a binary tree.
   Input keys traverse the tree with 0 for left and 1 for right.
@@ -34,12 +46,47 @@ defmodule Trie do
   end
 
   def as_list(trie) do
-    (for <<b :: 2 <- trie  >>, do: b)
+    do_as_list(trie, 0, 1)
+  end
+
+  defp do_as_list(trie_fragment, level_index, j_nodes_curr_level) when bit_size(trie_fragment) == 0 do
+    []
+  end
+
+  defp do_as_list(trie_fragment, level_index, j_nodes_curr_level) do
+
+    trie_level_slice_size = j_nodes_curr_level * @node_bit_size
+
+    << trie_level_slice::size(trie_level_slice_size), rest_trie::bitstring >> = << trie_fragment::bitstring >>
+
+    nodes_for_level = (for <<b :: 2 <- <<trie_level_slice::size(trie_level_slice_size)>>  >>, do: b)
+
+    {expanded_nodes, j_children_counts} = nodes_for_level
     |> Enum.map(fn(node) ->
       <<lhs::size(1), rhs::size(1)>> = <<node::size(2)>>
-      [lhs, rhs]
+      {{lhs, rhs}, lhs + rhs}
     end)
+    |> Enum.unzip
 
+    [expanded_nodes | do_as_list(rest_trie, level_index + 1, Enum.sum(j_children_counts))] 
+  end
+
+
+  @doc """
+  Returns the direct children of the trie.
+  """
+  def find_node(trie, target_level, j_node) do
+    trie
+    |> as_list
+    |> Enum.at(target_level)
+    |> Enum.at(j_node)
+
+  end
+
+  def do_find_node(trie, target_level, target_node, nodes_in_level, curr_level, accum_bit_offset) when target_level == curr_level do
+    bit_offset = target_node * 2 + accum_bit_offset
+    <<_offset::size(bit_offset), node::size(2), _rest::bitstring>> = trie
+    node
   end
 
   def left_branch do
