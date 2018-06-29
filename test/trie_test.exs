@@ -44,6 +44,9 @@ defmodule TrieTest do
 
       assert Trie.find_node(trie, 0, 0) == {0, 1}
       assert Trie.find_node(trie, 1, 0) == {1, 0}
+      assert_raise(ArgumentError, fn() ->
+        Trie.find_node(trie, 8, 0)
+      end)
     end
   end
 

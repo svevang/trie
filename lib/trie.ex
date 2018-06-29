@@ -77,6 +77,10 @@ defmodule Trie do
   end
 
 
+  def find_node(trie, target_level, j_node) when target_level >= length(trie) do
+    raise ArgumentError, message: "target_level exceed the len of the longest key."
+  end
+
   def find_node(trie, target_level, j_node) do
     trie
     |> Enum.at(target_level)
