@@ -24,17 +24,17 @@ defmodule Trie do
   end
 
   def from_key(input_key) do
-    do_from_key(input_key)
+    binary_from_key(input_key) |> binary_as_list
   end
 
-  def do_from_key(input_key, acc \\ <<>>)
+  def binary_from_key(input_key, acc \\ <<>>)
 
   # done recursing
-  def do_from_key(input_key, acc) when bit_size(input_key) == 0 do
+  def binary_from_key(input_key, acc) when bit_size(input_key) == 0 do
     acc
   end
 
-  def do_from_key(input_key, acc) do
+  def binary_from_key(input_key, acc) do
     <<target_bit::size(1), rest::bitstring>> = input_key
 
     acc = case target_bit do
@@ -42,10 +42,15 @@ defmodule Trie do
       0 -> << acc::bitstring, Trie.left_branch::bitstring >>
     end
 
-    do_from_key(rest, acc)
+    binary_from_key(rest, acc)
   end
 
-  def as_list(trie) do
+  @doc """
+  There are two representations here: a packed binary tree (suitable for
+  storage) and a list oriented form (suitable for processing). This method
+  coverts from the binary form to the list form.
+  """
+  def binary_as_list(trie) do
     do_as_list(trie, 0, 1)
   end
 
@@ -72,15 +77,10 @@ defmodule Trie do
   end
 
 
-  @doc """
-  Returns the direct children of the trie.
-  """
   def find_node(trie, target_level, j_node) do
     trie
-    |> as_list
     |> Enum.at(target_level)
     |> Enum.at(j_node)
-
   end
 
   def do_find_node(trie, target_level, target_node, nodes_in_level, curr_level, accum_bit_offset) when target_level == curr_level do
