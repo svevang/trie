@@ -50,4 +50,56 @@ defmodule TrieTest do
     end
   end
 
+  describe "find_bifurcation/2" do
+    test "finds a bifurcation at the beginning" do
+      all_zero_byte = <<0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1>>
+      all_one_byte = <<1::1, 1::1, 1::1, 1::1, 1::1, 1::1, 1::1, 1::1>>
+      base_trie =  Trie.from_key(all_zero_byte)
+      key_trie =  Trie.from_key(all_one_byte)
+
+      assert Trie.find_bifurcation(base_trie, key_trie) == 0
+    end
+
+    test "finds a bifurcation at the middle" do
+      base_byte = <<0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1>>
+      key_byte = <<0::1, 0::1, 1::1, 1::1, 1::1, 1::1, 1::1, 1::1>>
+      base_trie =  Trie.from_key(base_byte)
+      key_trie =  Trie.from_key(key_byte)
+
+      assert Trie.find_bifurcation(base_trie, key_trie) == 2
+    end
+
+    test "finds a bifurcation at the end" do
+      base_byte = <<0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1>>
+      key_byte = <<0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 1::1>>
+      base_trie =  Trie.from_key(base_byte)
+      key_trie =  Trie.from_key(key_byte)
+
+      assert Trie.find_bifurcation(base_trie, key_trie) == 7
+    end
+
+    test "finds no bifurcation if key is in tree" do
+      base_byte = <<0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1>>
+      key_byte = <<0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1>>
+      base_trie =  Trie.from_key(base_byte)
+      key_trie =  Trie.from_key(key_byte)
+
+      assert Trie.find_bifurcation(base_trie, key_trie) == nil
+    end
+
+    test "finds bifurcation if key is longer than tree" do
+      # both are all zeros
+      base_byte = <<0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1>>
+      key_byte = <<0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1>>
+      base_trie =  Trie.from_key(base_byte)
+      key_trie =  Trie.from_key(key_byte)
+
+      assert Trie.find_bifurcation(base_trie, key_trie) == {8, true}
+      #Here we are seeing the bifurcation just after the end of the current trie
+      assert 8 == length(base_trie)
+    end
+
+  end
+
+
 end

@@ -5,14 +5,35 @@ defmodule Trie do
 
   @node_bit_size 2
 
-  #def merge(trie, key) do
-    #root_level = 1
-    #do_merge(trie, key, root_level, ast)
-  #end
+  def merge(trie, key) do
+    key_trie = key
+               |> from_key
 
-  #def find_bifurcation(trie, key, curr_level, last) do
-    #leaf_level = length(key) + 1
-  #end
+    {} = bifurcation = find_bifurcation(trie, key_trie)
+  end
+
+  # fixme: guard for zero length trie?
+  def find_bifurcation(trie, key_trie, curr_level \\ 0)
+
+  # if the key is already inserted
+  def find_bifurcation(trie, key_trie, curr_level) when curr_level == length(key_trie), do: nil
+
+  def find_bifurcation(trie, key_trie, curr_level) when curr_level < length(key_trie) do
+    last_node = if curr_level < length(trie) do
+      find_node(trie, curr_level, -1)
+    else
+      nil
+    end
+
+    key_exceeds_length_of_trie = last_node == nil
+    key_bifurcates_trie = (last_node == {1, 0} && find_node(key_trie, curr_level, 0) == {0, 1})
+
+    if key_exceeds_length_of_trie || key_bifurcates_trie do
+      curr_level
+    else
+      find_bifurcation(trie, key_trie, curr_level + 1)
+    end
+  end
 
 
   @doc """
