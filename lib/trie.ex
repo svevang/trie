@@ -9,7 +9,25 @@ defmodule Trie do
     key_trie = key
                |> from_key
 
-    {} = bifurcation = find_bifurcation(trie, key_trie)
+    curr_level = find_bifurcation(trie, key_trie)
+    key_exceeds_length_of_trie = curr_level == length(trie)
+
+    if curr_level > length(trie) do
+      raise "curr_level cannot ever be larger than the length(trie)"
+    end
+
+    #if key_exceeds_length_of_trie do
+      #trie ++ key_trie
+    #else
+      
+    #end
+  end
+
+  #def do_merge(trie, key_trie, bifurcation_index) when bifurcation_index == length(key_trie), do: trie
+
+  #def do_merge(trie, key_trie, bifurcation_index) do
+    #if 
+
   end
 
   # fixme: guard for zero length trie?

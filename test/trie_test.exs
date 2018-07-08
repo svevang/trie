@@ -94,9 +94,21 @@ defmodule TrieTest do
       base_trie =  Trie.from_key(base_byte)
       key_trie =  Trie.from_key(key_byte)
 
-      assert Trie.find_bifurcation(base_trie, key_trie) == {8, true}
+      assert Trie.find_bifurcation(base_trie, key_trie) == 8
       #Here we are seeing the bifurcation just after the end of the current trie
       assert 8 == length(base_trie)
+    end
+
+  end
+
+  describe "merge/2" do
+
+    test "merges a key into a trie" do
+      all_one_byte = <<1::1, 1::1, 1::1, 1::1, 1::1, 1::1, 1::1, 1::1>>
+      all_zero_byte = <<0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1>>
+      # [[{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}]]
+      trie = Trie.from_key(all_zero_byte) 
+      assert Trie.merge(trie, all_one_byte) == [:fixme]
     end
 
   end
