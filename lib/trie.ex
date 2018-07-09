@@ -122,8 +122,12 @@ defmodule Trie do
     <<0::size(1), 1::size(1)>>
   end
 
-  def leaf_node do
+  def both_branch_node do
     <<1::size(1), 1::size(1)>>
+  end
+
+  def leaf_node do
+    <<0::size(1), 0::size(1)>>
   end
 
   @doc """
