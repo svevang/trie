@@ -13,17 +13,17 @@ defmodule TrieTest do
   describe "from_key/1" do
     test "Sets up a new trie" do
       a_byte = <<97>>
-      assert (Trie.from_key(a_byte)) == [[{1, 0}], [{0, 1}], [{0, 1}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{0, 1}]]
+      assert (Trie.from_key(a_byte)) == [[{1, 0}], [{0, 1}], [{0, 1}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{0, 1}], [{1, 1}]]
     end
 
     test "empty byte" do
       all_zero_byte = <<0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1>>
-      assert (Trie.from_key(all_zero_byte)) == [[{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}]]
+      assert (Trie.from_key(all_zero_byte)) == [[{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 1}]]
     end
 
     test "filled byte" do
       all_one_byte = <<1::1, 1::1, 1::1, 1::1, 1::1, 1::1, 1::1, 1::1>>
-      assert (Trie.from_key(all_one_byte)) == [[{0, 1}], [{0, 1}], [{0, 1}], [{0, 1}], [{0, 1}], [{0, 1}], [{0, 1}], [{0, 1}]]
+      assert (Trie.from_key(all_one_byte)) == [[{0, 1}], [{0, 1}], [{0, 1}], [{0, 1}], [{0, 1}], [{0, 1}], [{0, 1}], [{0, 1}], [{1, 1}]]
     end
 
     test "only accepts keys composed of whole bytes" do
@@ -45,7 +45,7 @@ defmodule TrieTest do
       assert Trie.find_node(trie, 0, 0) == {0, 1}
       assert Trie.find_node(trie, 1, 0) == {1, 0}
       assert_raise(ArgumentError, fn() ->
-        Trie.find_node(trie, 8, 0)
+        Trie.find_node(trie, 9, 0)
       end)
     end
   end
@@ -94,12 +94,11 @@ defmodule TrieTest do
       base_trie =  Trie.from_key(base_byte)
       key_trie =  Trie.from_key(key_byte)
 
-      assert Trie.find_bifurcation(base_trie, key_trie) == {8, true}
+      assert Trie.find_bifurcation(base_trie, key_trie) == 9
       #Here we are seeing the bifurcation just after the end of the current trie
-      assert 8 == length(base_trie)
+      assert 9 == length(base_trie)
     end
 
   end
-
 
 end
