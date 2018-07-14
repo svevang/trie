@@ -9,7 +9,46 @@ defmodule Trie do
     key_trie = key
                |> from_key
 
-    bifurcation = find_bifurcation(trie, key_trie)
+    curr_level = find_bifurcation(trie, key_trie)
+    key_exceeds_length_of_trie = curr_level == length(trie)
+
+    if curr_level > length(trie) do
+      raise "curr_level cannot ever be larger than the length(trie)"
+    end
+
+    modified_level = Enum.at(trie, curr_level)
+                    |> List.replace_at(-1, {1, 1}) # both node
+    trie = List.replace_at(trie, curr_level, modified_level)
+    [_key_head | rest_key ] = key_trie
+
+    do_merge(trie, rest_key, curr_level + 1)
+  end
+
+  def do_merge(trie, key_trie, curr_level) when key_trie == [] do
+    trie
+  end
+
+  def do_merge(trie, key_trie, curr_level) do
+    trie = if curr_level > length(trie) do
+      List.insert_at(trie, -1, [])
+    else
+      trie
+    end
+
+    [key_head | rest_key ] = key_trie
+
+    modified_level = Enum.at(trie, curr_level, [])
+                     |> List.insert_at(-1, List.first(key_head))
+
+    trie = if curr_level >= length(trie) do
+      trie ++ [modified_level]
+    else
+      List.replace_at(trie, curr_level, modified_level)
+    end
+
+
+    do_merge(trie, rest_key, curr_level + 1)
+
   end
 
   # fixme: guard for zero length trie?
@@ -122,8 +161,12 @@ defmodule Trie do
     <<0::size(1), 1::size(1)>>
   end
 
-  def leaf_node do
+  def both_branch_node do
     <<1::size(1), 1::size(1)>>
+  end
+
+  def leaf_node do
+    <<0::size(1), 0::size(1)>>
   end
 
   @doc """
