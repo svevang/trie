@@ -44,8 +44,17 @@ defmodule TrieTest do
 
       assert Trie.find_node(trie, 0, 0) == {0, 1}
       assert Trie.find_node(trie, 1, 0) == {1, 0}
+    end
+
+    test "checks bounds" do
+      key_byte = <<1::1, 0::1, 0::1, 0::1, 1::1, 0::1, 0::1, 0::1>>
+      trie = Trie.from_key(key_byte)
+
       assert_raise(ArgumentError, fn() ->
         Trie.find_node(trie, 9, 0)
+      end)
+      assert_raise(ArgumentError, fn() ->
+        Trie.find_node([], 0, 0)
       end)
     end
   end

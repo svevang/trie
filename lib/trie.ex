@@ -141,6 +141,11 @@ defmodule Trie do
     [expanded_nodes | do_as_list(rest_trie, level_index + 1, Enum.sum(j_children_counts))] 
   end
 
+  # Nodes
+
+  def find_node(trie, target_level, j_node) when length(trie) == 0 do
+    raise ArgumentError, message: "target_level exceed the len of the longest key."
+  end
 
   def find_node(trie, target_level, j_node) when target_level >= length(trie) do
     raise ArgumentError, message: "target_level exceed the len of the longest key."
