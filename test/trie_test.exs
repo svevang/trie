@@ -145,6 +145,24 @@ defmodule TrieTest do
         [{0, 0}]]
     end
 
+    test "merging a key already in the trie does nothing" do
+      all_one_byte = <<1::1, 1::1, 1::1, 1::1, 1::1, 1::1, 1::1, 1::1>>
+      all_zero_byte = <<0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1>>
+      # [[{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}]]
+      trie = Trie.from_key(all_zero_byte) 
+      trie = Trie.merge(trie, all_one_byte)
+      assert Trie.merge(trie, all_one_byte) == [[{1, 1}],
+                                                [{1, 0}, {0, 1}],
+                                                [{1, 0}, {0, 1}],
+                                                [{1, 0}, {0, 1}],
+                                                [{1, 0}, {0, 1}],
+                                                [{1, 0}, {0, 1}],
+                                                [{1, 0}, {0, 1}],
+                                                [{1, 0}, {0, 1}],
+                                                [{0, 0}, {0, 0}]
+      ]
+    end
+
 
   end
 
