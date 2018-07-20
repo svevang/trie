@@ -10,17 +10,15 @@ defmodule Trie do
                |> from_key
 
     curr_level = find_bifurcation(trie, key_trie)
-    key_exceeds_length_of_trie = curr_level == length(trie)
 
     if curr_level == nil do
       trie
     else
-      if curr_level > length(trie) do
-        raise "curr_level cannot ever be larger than the length(trie)"
-      end
+      # fast forward down to the mergeable nodes
+      key_trie = Enum.drop(key_trie, curr_level)
 
       modified_node = Enum.at(trie, curr_level)
-                       |> List.replace_at(-1, {1, 1}) # both node
+                       |> List.replace_at(-1, {1, 1})
       trie = List.replace_at(trie, curr_level, modified_node)
       [_key_head | rest_key ] = key_trie
 
@@ -34,12 +32,6 @@ defmodule Trie do
   end
 
   def do_merge(trie, key_trie, curr_level) do
-    trie = if curr_level > length(trie) do
-      List.insert_at(trie, -1, [])
-    else
-      trie
-    end
-
     [key_head | rest_key ] = key_trie
 
     modified_level = Enum.at(trie, curr_level, [])
