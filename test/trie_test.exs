@@ -166,5 +166,24 @@ defmodule TrieTest do
 
   end
 
+  describe "outbound_links/2" do
+    test "sums outbound_links previous to this node" do
+      assert Trie.outbound_links([{0, 0}, {0, 1}, {1, 0}, {0, 0}], 3) == 2
+      assert Trie.outbound_links([{1, 1}, {1, 0}, {0, 1}, {1, 1}], 3) == 4
+      assert Trie.outbound_links([{1, 1}], 0) == 0
+    end
+  end
+
+  describe "all_keys/2" do
+    test "returns a list of all keys in the trie" do
+      trie = Trie.from_key("asdf")
+      |> Trie.merge("qwer")
+
+      assert Trie.all_keys(trie) == ["asdf", "qwer"]
+    end
+  end
+
+
+
 
 end

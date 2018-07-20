@@ -5,6 +5,54 @@ defmodule Trie do
 
   @node_bit_size 2
 
+  def outbound_links(level, prior_to_node_index, curr_index \\ 0)
+
+  def outbound_links(level, prior_to_node_index, curr_index) when curr_index == prior_to_node_index do
+    0
+  end
+
+  def outbound_links(level, prior_to_node_index, curr_index) do
+    node = Enum.at(level, curr_index)
+    {lhs, rhs} = node
+
+    lhs + rhs + outbound_links(level, prior_to_node_index, curr_index + 1)
+  end
+
+  def all_keys(trie) do
+    # accumulate a key by traversing down to a leaf
+    # call function on each discovered key
+    iter_tree(trie, 0, 0, <<>>)
+  end
+
+  def iter_tree(trie, curr_level, j_node, accum) do
+    curr_node = find_node(trie, curr_level, j_node)
+
+    res = if curr_node == {0, 0} do
+      [accum]
+    else
+      prev_children = Enum.at(trie, curr_level)
+      |> outbound_links(j_node)
+      {lhs, rhs} = curr_node
+
+      branch_results = []
+      branch_results = if lhs == 1 do
+        iter_tree(trie, curr_level + 1, prev_children, <<accum::bitstring, 0::size(1)>>)
+      else
+        []
+      end
+
+      branch_results = branch_results ++ if rhs == 1 do
+        iter_tree(trie, curr_level + 1, prev_children + lhs, <<accum::bitstring, 1::size(1)>>)
+      else
+        []
+      end
+
+      branch_results
+    end
+
+
+  end
+
   def merge(trie, key) do
     key_trie = key
                |> from_key
