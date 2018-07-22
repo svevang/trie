@@ -65,7 +65,7 @@ defmodule Trie do
       # fast forward down to the mergeable nodes
       key_trie = Enum.drop(key_trie, curr_level)
 
-      modified_node = Enum.at(trie, curr_level)
+      modified_node = Enum.at(trie, curr_level, [])
                        |> List.replace_at(-1, {1, 1})
       trie = List.replace_at(trie, curr_level, modified_node)
       [_key_head | rest_key ] = key_trie

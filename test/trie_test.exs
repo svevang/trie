@@ -164,6 +164,10 @@ defmodule TrieTest do
 
     end
 
+    test "key to merge's head node is beyond the length of the current trie" do
+      assert Trie.from_key("A") |> Trie.merge("Aani")
+    end
+
   end
 
   describe "outbound_links/2" do
