@@ -84,24 +84,30 @@ defmodule Trie do
     trie
   end
 
-  def do_merge(trie, key_trie, curr_level) do
-    [key_head | rest_key ] = key_trie
-
-    modified_level = Enum.at(trie, curr_level, [])
-                     |> List.insert_at(-1, List.first(key_head))
-
+  def modify_trie(trie, curr_level, modified_level) do
     trie = if curr_level >= length(trie) do
       trie ++ [modified_level]
     else
       List.replace_at(trie, curr_level, modified_level)
     end
+  end
 
+  def modify_level(trie, curr_level, node) do
+    modified_level = Enum.at(trie, curr_level, [])
+                     |> List.insert_at(-1, node)
+  end
+
+  def do_merge(trie, key_trie, curr_level) do
+    [key_head | rest_key ] = key_trie
+
+    modified_level = modify_level(trie, curr_level, List.first(key_head))
+
+    trie = modify_trie(trie, curr_level, modified_level)
 
     do_merge(trie, rest_key, curr_level + 1)
 
   end
 
-  # fixme: guard for zero length trie?
   def find_bifurcation(trie, key_trie, curr_level \\ 0)
 
   # if the key is already inserted
@@ -168,6 +174,14 @@ defmodule Trie do
     []
   end
 
+    def foo do
+    end
+
+  def sum_outbound(node) do
+      <<lhs::size(1), rhs::size(1)>> = <<node::size(2)>>
+      {{lhs, rhs}, lhs + rhs}
+  end
+
   defp do_as_list(trie_fragment, level_index, j_nodes_curr_level) do
 
     trie_level_slice_size = j_nodes_curr_level * @node_bit_size
@@ -178,8 +192,7 @@ defmodule Trie do
 
     {expanded_nodes, j_children_counts} = nodes_for_level
     |> Enum.map(fn(node) ->
-      <<lhs::size(1), rhs::size(1)>> = <<node::size(2)>>
-      {{lhs, rhs}, lhs + rhs}
+      sum_outbound(node)
     end)
     |> Enum.unzip
 
