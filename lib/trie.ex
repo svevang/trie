@@ -5,6 +5,11 @@ defmodule Trie do
 
   @node_bit_size 2
 
+  @left_branch_node <<1::size(1), 0::size(1)>>
+  @right_branch_node <<0::size(1), 1::size(1)>>
+  @both_branch_node <<1::size(1), 1::size(1)>>
+  @leaf_node <<0::size(1), 0::size(1)>>
+
   def outbound_links(level, prior_to_node_index, curr_index \\ 0)
 
   def outbound_links(level, prior_to_node_index, curr_index) when curr_index == prior_to_node_index do
@@ -136,15 +141,15 @@ defmodule Trie do
 
   # done recursing
   def binary_from_key(input_key, acc) when bit_size(input_key) == 0 do
-    << acc::bitstring, leaf_node::bitstring >>
+    << acc::bitstring, @leaf_node::bitstring >>
   end
 
   def binary_from_key(input_key, acc) do
     <<target_bit::size(1), rest::bitstring>> = input_key
 
     acc = case target_bit do
-      1 -> << acc::bitstring, Trie.right_branch_node::bitstring >>
-      0 -> << acc::bitstring, Trie.left_branch_node::bitstring >>
+      1 -> << acc::bitstring, @right_branch_node::bitstring >>
+      0 -> << acc::bitstring, @left_branch_node::bitstring >>
     end
 
     binary_from_key(rest, acc)
@@ -201,22 +206,6 @@ defmodule Trie do
     bit_offset = target_node * 2 + accum_bit_offset
     <<_offset::size(bit_offset), node::size(2), _rest::bitstring>> = trie
     node
-  end
-
-  def left_branch_node do
-    <<1::size(1), 0::size(1)>>
-  end
-
-  def right_branch_node do
-    <<0::size(1), 1::size(1)>>
-  end
-
-  def both_branch_node do
-    <<1::size(1), 1::size(1)>>
-  end
-
-  def leaf_node do
-    <<0::size(1), 0::size(1)>>
   end
 
   @doc """
