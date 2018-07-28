@@ -130,6 +130,15 @@ defmodule Trie do
     end
   end
 
+  @doc """
+  Given a list of Elixir binaries, return a trie representation whose bits are edges in a binary tree.
+  Input keys traverse the tree with 0 for left and 1 for right.
+  """
+  def from_keys(input_key_list, trie \\ nil) when is_list(input_key_list) do
+    {head_el, rest} = List.pop_at(input_key_list, 0)
+    t = from_key(head_el)
+    [t | rest] |> Enum.reduce(fn(val, trie) -> Trie.merge(trie, val)  end)
+  end
 
   @doc """
   Given an Elixir binary, return a trie representation whose bits are edges in a binary tree.
