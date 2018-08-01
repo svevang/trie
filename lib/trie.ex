@@ -110,23 +110,26 @@ defmodule Trie do
 
   def find_bifurcation(trie, key_trie, curr_level \\ 0)
 
-  # if the key is already inserted
-  def find_bifurcation(trie, key_trie, curr_level) when curr_level == length(key_trie), do: nil
+  def find_bifurcation(trie, key_trie, curr_level) do
 
-  def find_bifurcation(trie, key_trie, curr_level) when curr_level < length(key_trie) do
-    last_node = if curr_level < length(trie) do
-      find_node(trie, curr_level, -1)
-    else
-      nil
-    end
+    cond do
+      curr_level == :array.size(key_trie) ->
+        nil
+      curr_level < :array.size(key_trie) ->
+        last_node = if curr_level < :array.size(trie) do
+          find_node(trie, curr_level, -1)
+        else
+          nil
+        end
 
-    key_exceeds_length_of_trie = last_node == nil
-    key_bifurcates_trie = (last_node == {1, 0} && find_node(key_trie, curr_level, 0) == {0, 1})
+        key_exceeds_length_of_trie = last_node == nil
+        key_bifurcates_trie = (last_node == {1, 0} && find_node(key_trie, curr_level, 0) == {0, 1})
 
-    if key_exceeds_length_of_trie || key_bifurcates_trie do
-      curr_level
-    else
-      find_bifurcation(trie, key_trie, curr_level + 1)
+        if key_exceeds_length_of_trie || key_bifurcates_trie do
+          curr_level
+        else
+          find_bifurcation(trie, key_trie, curr_level + 1)
+        end
     end
   end
 
@@ -149,7 +152,7 @@ defmodule Trie do
   end
 
   def from_key(input_key) do
-    binary_from_key(input_key) |> binary_as_list
+    binary_from_key(input_key) |> binary_as_array
   end
 
   def binary_from_key(input_key, acc \\ <<>>)
@@ -175,53 +178,44 @@ defmodule Trie do
   storage) and a list oriented form (suitable for processing). This method
   coverts from the binary form to the list form.
   """
-  def binary_as_list(trie) do
-    do_as_list(trie, 0, 1)
+  def binary_as_array(trie) do
+    array_len = Kernel.trunc(bit_size(trie) / 2.0)
+    do_as_array(trie, 0, 1, :array.new([{:size, array_len}, {:fixed, true}]))
   end
 
-  defp do_as_list(trie_fragment, level_index, j_nodes_curr_level) when bit_size(trie_fragment) == 0 do
-    []
+  defp do_as_array(trie_fragment, level_index, j_nodes_curr_level, accum) when bit_size(trie_fragment) == 0 do
+    accum
   end
 
-    def foo do
-    end
-
-  def sum_outbound(node) do
-      <<lhs::size(1), rhs::size(1)>> = <<node::size(2)>>
-      {{lhs, rhs}, lhs + rhs}
-  end
-
-  defp do_as_list(trie_fragment, level_index, j_nodes_curr_level) do
+  defp do_as_array(trie_fragment, level_index, j_nodes_curr_level, accum) do
 
     trie_level_slice_size = j_nodes_curr_level * @node_bit_size
 
     << trie_level_slice::size(trie_level_slice_size), rest_trie::bitstring >> = << trie_fragment::bitstring >>
 
-    nodes_for_level = (for <<b :: 2 <- <<trie_level_slice::size(trie_level_slice_size)>>  >>, do: b)
+    j_children_counts = length(for <<b :: 1 <- <<trie_level_slice::size(trie_level_slice_size)>>  >>, b > 0, do: b)
 
-    {expanded_nodes, j_children_counts} = nodes_for_level
-    |> Enum.map(fn(node) ->
-      sum_outbound(node)
-    end)
-    |> Enum.unzip
-
-    [expanded_nodes | do_as_list(rest_trie, level_index + 1, Enum.sum(j_children_counts))] 
+    do_as_array(rest_trie,
+               level_index + 1,
+               j_children_counts,
+               :array.set(level_index, {j_nodes_curr_level, trie_level_slice}, accum))
   end
 
   # Nodes
 
-  def find_node(trie, target_level, j_node) when length(trie) == 0 do
-    raise ArgumentError, message: "target_level exceed the len of the longest key."
-  end
-
-  def find_node(trie, target_level, j_node) when target_level >= length(trie) do
-    raise ArgumentError, message: "target_level exceed the len of the longest key."
-  end
-
   def find_node(trie, target_level, j_node) do
-    trie
-    |> Enum.at(target_level)
-    |> Enum.at(j_node)
+    cond do
+      :array.size(trie) == 0 ->
+        raise ArgumentError, message: "Trie must not be empty."
+      target_level >= :array.size(trie) ->
+        raise ArgumentError, message: "target_level exceed the len of the longest key."
+      true ->
+        {node_count, level} = :array.get(target_level, trie)
+        bit_offset = j_node * 2
+        level_bits = node_count * 2
+        <<_offset::size(bit_offset), target_node::size(2), _rest::bitstring>> = <<level::size(level_bits)>>
+        target_node
+    end
   end
 
   def do_find_node(trie, target_level, target_node, nodes_in_level, curr_level, accum_bit_offset) when target_level == curr_level do

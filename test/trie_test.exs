@@ -3,10 +3,11 @@ defmodule TrieTest do
   doctest Trie
 
 
-  describe "binary_as_list/1" do
+
+  describe "binary_as_array/1" do
     test "it can print out a node as a single node trie" do
-      assert <<1::1, 0::1>> |> Trie.binary_as_list == [[{1, 0}]]
-      assert <<0::1, 0::1>> |> Trie.binary_as_list == [[{0, 0}]]
+      assert <<1::1, 0::1>> |> Trie.binary_as_array |> :array.to_list == [{1, 2}]
+      assert <<0::1, 0::1>> |> Trie.binary_as_array |> :array.to_list == [{1, 0}]
     end
   end
 
@@ -42,8 +43,8 @@ defmodule TrieTest do
       key_byte = <<1::1, 0::1, 0::1, 0::1, 1::1, 0::1, 0::1, 0::1>>
       trie = Trie.from_key(key_byte)
 
-      assert Trie.find_node(trie, 0, 0) == {0, 1}
-      assert Trie.find_node(trie, 1, 0) == {1, 0}
+      assert Trie.find_node(trie, 0, 0) == 1
+      assert Trie.find_node(trie, 1, 0) == 2
     end
 
     test "checks bounds" do
