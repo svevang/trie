@@ -5,26 +5,26 @@ defmodule TrieTest do
 
 
   describe "binary_as_array/1" do
-    test "it can print out a node as a single node trie" do
-      assert <<1::1, 0::1>> |> Trie.binary_as_array |> :array.to_list == [{1, 2}]
-      assert <<0::1, 0::1>> |> Trie.binary_as_array |> :array.to_list == [{1, 0}]
+    test "it can print out a node as a trie fragment (missing leaf node)" do
+      assert <<1::1, 0::1>> |> Trie.binary_as_array |> Trie.as_list == [[{1, 0}]]
+      assert <<0::1, 0::1>> |> Trie.binary_as_array |> Trie.as_list == [[{0, 0}]]
     end
   end
 
   describe "from_key/1" do
     test "Sets up a new trie" do
       a_byte = <<97>>
-      assert (Trie.from_key(a_byte)) == [[{1, 0}], [{0, 1}], [{0, 1}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{0, 1}], [{0, 0}]]
+      assert (Trie.from_key(a_byte)) |> Trie.as_list == [[{1, 0}], [{0, 1}], [{0, 1}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{0, 1}], [{0, 0}]]
     end
 
     test "empty byte" do
       all_zero_byte = <<0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1>>
-      assert (Trie.from_key(all_zero_byte)) == [[{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{0, 0}]]
+      assert (Trie.from_key(all_zero_byte)) |> Trie.as_list == [[{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{0, 0}]]
     end
 
     test "filled byte" do
       all_one_byte = <<1::1, 1::1, 1::1, 1::1, 1::1, 1::1, 1::1, 1::1>>
-      assert (Trie.from_key(all_one_byte)) == [[{0, 1}], [{0, 1}], [{0, 1}], [{0, 1}], [{0, 1}], [{0, 1}], [{0, 1}], [{0, 1}], [{0, 0}]]
+      assert (Trie.from_key(all_one_byte)) |> Trie.as_list == [[{0, 1}], [{0, 1}], [{0, 1}], [{0, 1}], [{0, 1}], [{0, 1}], [{0, 1}], [{0, 1}], [{0, 0}]]
     end
 
     test "only accepts keys composed of whole bytes" do

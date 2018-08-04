@@ -201,6 +201,28 @@ defmodule Trie do
                :array.set(level_index, {j_nodes_curr_level, trie_level_slice}, accum))
   end
 
+  def as_list(trie) do
+    :array.to_list(trie)
+    |> Enum.map(fn({size, level_bitstring}) ->
+      do_as_list(level_bitstring, size)
+    end)
+  end
+
+  defp do_as_list(trie_level_slice, j_nodes_curr_level) do
+    trie_level_slice_size = j_nodes_curr_level * @node_bit_size
+
+    nodes_for_level = (for <<b :: 2 <- <<trie_level_slice::size(trie_level_slice_size)>>  >>, do: b)
+
+    expanded_nodes = nodes_for_level
+    |> Enum.map(fn(node) ->
+      <<lhs::size(1), rhs::size(1)>> = <<node::size(2)>>
+      {lhs, rhs}
+    end)
+
+
+    expanded_nodes
+  end
+
   # Nodes
 
   def find_node(trie, target_level, j_node) do
