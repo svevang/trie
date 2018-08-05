@@ -8,6 +8,10 @@ defmodule TrieTest do
     test "it can print out a node as a trie fragment (missing leaf node)" do
       assert <<1::1, 0::1>> |> Trie.binary_as_array |> Trie.as_list == [[{1, 0}]]
       assert <<0::1, 0::1>> |> Trie.binary_as_array |> Trie.as_list == [[{0, 0}]]
+
+      # examine a raw array entry
+      arr = <<0::1, 0::1>> |> Trie.binary_as_array
+      assert :array.get(0, arr) == {1, <<0::size(2)>>}
     end
   end
 

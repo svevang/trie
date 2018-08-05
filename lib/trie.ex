@@ -195,9 +195,9 @@ defmodule Trie do
 
     trie_level_slice_size = j_nodes_curr_level * @node_bit_size
 
-    << trie_level_slice::size(trie_level_slice_size), rest_trie::bitstring >> = << trie_fragment::bitstring >>
+    << trie_level_slice::bitstring-size(trie_level_slice_size), rest_trie::bitstring >> = << trie_fragment::bitstring >>
 
-    j_children_counts = length(for <<b :: 1 <- <<trie_level_slice::size(trie_level_slice_size)>>  >>, b > 0, do: b)
+    j_children_counts = length(for <<b :: 1 <- <<trie_level_slice::bitstring-size(trie_level_slice_size)>>  >>, b > 0, do: b)
 
     do_as_array(rest_trie,
                level_index + 1,
@@ -215,7 +215,7 @@ defmodule Trie do
   defp do_as_list(trie_level_slice, j_nodes_curr_level) do
     trie_level_slice_size = j_nodes_curr_level * @node_bit_size
 
-    nodes_for_level = (for <<b :: 2 <- <<trie_level_slice::size(trie_level_slice_size)>>  >>, do: b)
+    nodes_for_level = (for <<b :: 2 <- <<trie_level_slice::bitstring-size(trie_level_slice_size)>>  >>, do: b)
 
     expanded_nodes = nodes_for_level
     |> Enum.map(fn(node) ->
@@ -237,9 +237,10 @@ defmodule Trie do
         raise ArgumentError, message: "target_level exceed the len of the longest key."
       true ->
         {node_count, level} = :array.get(target_level, trie)
+
         bit_offset = j_node * 2
         level_bits = node_count * 2
-        <<_offset::size(bit_offset), target_node::size(2), _rest::bitstring>> = <<level::size(level_bits)>>
+        <<_offset::bitstring-size(bit_offset), target_node::size(2), _rest::bitstring>> = <<level::bitstring-size(level_bits)>>
         target_node
     end
   end
