@@ -104,9 +104,9 @@ defmodule TrieTest do
       base_trie =  Trie.from_key(base_byte)
       key_trie =  Trie.from_key(key_byte)
 
-      assert Trie.find_bifurcation(base_trie, key_trie) == 9
-      #Here we are seeing the bifurcation just after the end of the current trie
-      assert 9 == length(base_trie)
+      assert Trie.find_bifurcation(base_trie, key_trie) == 8
+      # Here we are seeing the bifurcation just after the end of the current trie on the leaf node
+      assert 9 == :array.size(base_trie)
     end
 
   end

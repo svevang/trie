@@ -116,14 +116,18 @@ defmodule Trie do
       curr_level == :array.size(key_trie) ->
         nil
       curr_level < :array.size(key_trie) ->
-        last_node = if curr_level < :array.size(trie) do
-          find_node(trie, curr_level, -1)
+        last_node_of_trie = if curr_level < :array.size(trie) do
+          {node_count, _} = :array.get(curr_level, trie)
+          find_node(trie, curr_level, node_count - 1)
         else
           nil
         end
 
-        key_exceeds_length_of_trie = last_node == nil
-        key_bifurcates_trie = (last_node == {1, 0} && find_node(key_trie, curr_level, 0) == {0, 1})
+        curr_node_key_trie = find_node(key_trie, curr_level, 0)
+
+        key_exceeds_length_of_trie = <<last_node_of_trie::2>> == <<0::2>>
+        key_bifurcates_trie = (<<last_node_of_trie::2>> == <<1::size(1), 0::size(1)>> && <<curr_node_key_trie::2>> == <<0::size(1), 1::size(1)>>)
+
 
         if key_exceeds_length_of_trie || key_bifurcates_trie do
           curr_level
