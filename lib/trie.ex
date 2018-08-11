@@ -67,50 +67,80 @@ defmodule Trie do
     if curr_level == nil do
       trie
     else
-      # fast forward down to the mergeable nodes
-      key_trie = Enum.drop(key_trie, curr_level)
 
-      modified_node = Enum.at(trie, curr_level, [])
-                       |> List.replace_at(-1, {1, 1})
-      trie = List.replace_at(trie, curr_level, modified_node)
-      [_key_head | rest_key ] = key_trie
+      if curr_level > :array.size(trie) do
+        raise "bifucation cannot occur after the longest key in trie"
+      end
 
-      do_merge(trie, rest_key, curr_level + 1)
+      trie = set_both_branch_node(trie, curr_level)
+
+      merge_level(trie, key_trie, curr_level + 1)
     end
 
   end
 
-  def do_merge(trie, key_trie, curr_level) when key_trie == [] do
-    trie
-  end
-
-  def modify_trie(trie, curr_level, modified_level) do
-    trie = if curr_level >= length(trie) do
-      trie ++ [modified_level]
+  def merge_level(trie, key_trie, curr_level) do
+    if curr_level == :array.size(key_trie) do
+      trie
     else
-      List.replace_at(trie, curr_level, modified_level)
+      node_to_append = find_node(key_trie, curr_level, 0)
+
+      merge_level(append_node(trie, curr_level, node_to_append), key_trie, curr_level + 1)
+    end
+
+    #cond do
+      #:array.size(trie) == 
+    #end
+
+    #do_merge(trie, rest_key, curr_level + 1)
+
+  end
+
+  def resize_for_level(trie, i_level) do
+    if i_level == :array.size(trie) do
+      :array.resize(i_level + 1, trie)
+    else
+      trie
     end
   end
 
-  def modify_level(trie, curr_level, node) do
-    modified_level = Enum.at(trie, curr_level, [])
-                     |> List.insert_at(-1, node)
+  def append_node(trie, i_level, node_to_append) do
+    trie = resize_for_level(trie, i_level)
+    {ct, bits} = :array.get(i_level, trie)
+
+    level_bit_size = ct * @node_bit_size
+    new_level = {ct + 1, <<bits::bitstring-size(level_bit_size), node_to_append::bitstring-size(@node_bit_size)>> }
+    :array.set(i_level, new_level, trie)
   end
 
-  def do_merge(trie, key_trie, curr_level) do
-    [key_head | rest_key ] = key_trie
+  def set_both_branch_node(trie, i_level) do
+    trie = if i_level == :array.size(trie) do
+      :array.resize(i_level + 1, trie)
+    else
+      trie
+    end
 
-    modified_level = modify_level(trie, curr_level, List.first(key_head))
+    {ct, bits} = :array.get(i_level, trie)
+    bit_offset = if ct == 0 do
+      0
+    else
+      (ct - 1) * @node_bit_size
+    end
 
-    trie = modify_trie(trie, curr_level, modified_level)
+    total_bits = ct * @node_bit_size
+    << leading_nodes::bitstring-size(bit_offset), _skip_node::2 >> = << bits::bitstring-size(total_bits) >>
 
-    do_merge(trie, rest_key, curr_level + 1)
-
+    with_node = @both_branch_node
+    
+    new_level = {ct, <<leading_nodes::bitstring-size(bit_offset), with_node::bitstring-size(@node_bit_size)>> }
+    :array.set(i_level, new_level, trie)
   end
+
 
   def find_bifurcation(trie, key_trie, curr_level \\ 0)
 
   def find_bifurcation(trie, key_trie, curr_level) do
+
 
     cond do
       curr_level == :array.size(key_trie) ->
@@ -125,9 +155,12 @@ defmodule Trie do
 
         curr_node_key_trie = find_node(key_trie, curr_level, 0)
 
-        key_exceeds_length_of_trie = <<last_node_of_trie::2>> == <<0::2>>
-        key_bifurcates_trie = (<<last_node_of_trie::2>> == <<1::size(1), 0::size(1)>> && <<curr_node_key_trie::2>> == <<0::size(1), 1::size(1)>>)
+        key_exceeds_length_of_trie = last_node_of_trie == nil
 
+        <<t1::bitstring-size(1), t2::bitstring-size(1)>> = last_node_of_trie
+        <<k1::bitstring-size(1), k2::bitstring-size(1)>> = curr_node_key_trie
+
+        key_bifurcates_trie = (k2 != t2) || (last_node_of_trie == @leaf_node && curr_node_key_trie != @leaf_node)
 
         if key_exceeds_length_of_trie || key_bifurcates_trie do
           curr_level
@@ -184,7 +217,7 @@ defmodule Trie do
   """
   def binary_as_array(trie) do
     array_len = Kernel.trunc(bit_size(trie) / 2.0)
-    do_as_array(trie, 0, 1, :array.new([{:size, array_len}, {:fixed, true}]))
+    do_as_array(trie, 0, 1, :array.new([{:size, array_len}, {:fixed, true}, {:default, {0, <<>>}}]))
   end
 
   defp do_as_array(trie_fragment, level_index, j_nodes_curr_level, accum) when bit_size(trie_fragment) == 0 do
@@ -240,7 +273,7 @@ defmodule Trie do
 
         bit_offset = j_node * 2
         level_bits = node_count * 2
-        <<_offset::bitstring-size(bit_offset), target_node::size(2), _rest::bitstring>> = <<level::bitstring-size(level_bits)>>
+        <<_offset::bitstring-size(bit_offset), target_node::bitstring-size(2), _rest::bitstring>> = <<level::bitstring-size(level_bits)>>
         target_node
     end
   end

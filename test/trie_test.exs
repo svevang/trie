@@ -3,6 +3,20 @@ defmodule TrieTest do
   doctest Trie
 
 
+  describe "set_both_branch_node/2" do
+    test "it can replace a level's last node in a trie" do
+      a_byte = <<97>>
+      assert (Trie.from_key(a_byte)) |> Trie.set_both_branch_node(0) |> Trie.as_list == [[{1, 1}], [{0, 1}], [{0, 1}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{0, 1}], [{0, 0}]]
+      assert (Trie.from_key(a_byte)) |> Trie.set_both_branch_node(1) |> Trie.as_list == [[{1, 0}], [{1, 1}], [{0, 1}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{0, 1}], [{0, 0}]]
+    end
+  end
+
+  describe "append_node/2" do
+    test "it can append a node to a trie's level" do
+      a_byte = <<97>>
+      assert (Trie.from_key(a_byte)) |> Trie.append_node(0, <<0::1, 0::1>>) |> Trie.as_list == [[{1, 0}, {0, 0}], [{0, 1}], [{0, 1}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{0, 1}], [{0, 0}]]
+    end
+  end
 
   describe "binary_as_array/1" do
     test "it can print out a node as a trie fragment (missing leaf node)" do
@@ -47,8 +61,8 @@ defmodule TrieTest do
       key_byte = <<1::1, 0::1, 0::1, 0::1, 1::1, 0::1, 0::1, 0::1>>
       trie = Trie.from_key(key_byte)
 
-      assert Trie.find_node(trie, 0, 0) == 1
-      assert Trie.find_node(trie, 1, 0) == 2
+      assert Trie.find_node(trie, 0, 0) == <<1::size(2)>>
+      assert Trie.find_node(trie, 1, 0) == <<2::size(2)>>
     end
 
     test "checks bounds" do
@@ -122,7 +136,7 @@ defmodule TrieTest do
       all_zero_byte = <<0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1>>
       # [[{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}]]
       trie = Trie.from_key(all_zero_byte) 
-      assert Trie.merge(trie, all_one_byte) == [[{1, 1}],
+      assert Trie.merge(trie, all_one_byte)|> Trie.as_list == [[{1, 1}],
                                                 [{1, 0}, {0, 1}],
                                                 [{1, 0}, {0, 1}],
                                                 [{1, 0}, {0, 1}],
@@ -139,7 +153,7 @@ defmodule TrieTest do
       all_zero_byte = <<0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1>>
       # [[{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}]]
       trie = Trie.from_key(all_zero_byte) 
-      assert Trie.merge(trie, all_one_byte <> all_one_byte) == [
+      assert Trie.merge(trie, all_one_byte <> all_one_byte) |> Trie.as_list == [
         [{1, 1}],
         [{1, 0}, {0, 1}],
         [{1, 0}, {0, 1}],
