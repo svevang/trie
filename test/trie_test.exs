@@ -195,9 +195,8 @@ defmodule TrieTest do
 
   describe "outbound_links/2" do
     test "sums outbound_links previous to this node" do
-      assert Trie.outbound_links([{0, 0}, {0, 1}, {1, 0}, {0, 0}], 3) == 2
-      assert Trie.outbound_links([{1, 1}, {1, 0}, {0, 1}, {1, 1}], 3) == 4
-      assert Trie.outbound_links([{1, 1}], 0) == 0
+      assert Trie.outbound_links({4, <<0::2, 1::2, 2::2, 0::2>>}, 3) == 2
+
     end
   end
 
