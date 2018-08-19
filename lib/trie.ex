@@ -17,8 +17,8 @@ defmodule Trie do
   end
 
   def outbound_links(level, prior_to_node_index, curr_index) do
-    node = Enum.at(level, curr_index)
-    {lhs, rhs} = node
+    node = find_node_on_level(level, curr_index)
+    <<lhs::integer-size(1), rhs::integer-size(1)>> = node
 
     lhs + rhs + outbound_links(level, prior_to_node_index, curr_index + 1)
   end
@@ -32,12 +32,12 @@ defmodule Trie do
   def iter_tree(trie, curr_level, j_node, accum) do
     curr_node = find_node(trie, curr_level, j_node)
 
-    res = if curr_node == {0, 0} do
+    res = if curr_node == @leaf_node do
       [accum]
     else
-      prev_children = Enum.at(trie, curr_level)
+      prev_children = :array.get(curr_level, trie)
       |> outbound_links(j_node)
-      {lhs, rhs} = curr_node
+      <<lhs::integer-size(1), rhs::integer-size(1)>> = curr_node
 
       branch_results = []
       branch_results = if lhs == 1 do
@@ -269,19 +269,19 @@ defmodule Trie do
       target_level >= :array.size(trie) ->
         raise ArgumentError, message: "target_level exceed the len of the longest key."
       true ->
-        {node_count, level} = :array.get(target_level, trie)
+        level = :array.get(target_level, trie)
+        find_node_on_level(level, j_node)
 
-        bit_offset = j_node * 2
-        level_bits = node_count * 2
-        <<_offset::bitstring-size(bit_offset), target_node::bitstring-size(2), _rest::bitstring>> = <<level::bitstring-size(level_bits)>>
-        target_node
     end
   end
 
-  def do_find_node(trie, target_level, target_node, nodes_in_level, curr_level, accum_bit_offset) when target_level == curr_level do
-    bit_offset = target_node * 2 + accum_bit_offset
-    <<_offset::size(bit_offset), node::size(2), _rest::bitstring>> = trie
-    node
+  def find_node_on_level(level, j_node) do
+    {node_count, bits} = level
+
+    bit_offset = j_node * 2
+    level_bits = node_count * 2
+    <<_offset::bitstring-size(bit_offset), target_node::bitstring-size(2), _rest::bitstring>> = <<bits::bitstring-size(level_bits)>>
+    target_node
   end
 
   @doc """

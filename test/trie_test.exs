@@ -175,11 +175,15 @@ defmodule TrieTest do
 
     test "merging a key already in the trie does nothing" do
 
-      assert Trie.from_key("asdf")
-      |> Trie.merge("qwer")
-      |> Trie.merge("qwer") ==
-        Trie.from_key("asdf")
-        |> Trie.merge("qwer")
+      all_one_byte = <<1::1, 1::1, 1::1, 1::1, 1::1, 1::1, 1::1, 1::1>>
+      all_zero_byte = <<0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1>>
+
+      assert Trie.from_key(all_zero_byte)
+      |> Trie.merge(all_one_byte)
+      |> Trie.merge(all_one_byte) |> Trie.as_list ==
+        Trie.from_key(all_zero_byte)
+        |> Trie.merge(all_one_byte)
+        |> Trie.as_list 
 
     end
 
