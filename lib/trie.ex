@@ -62,6 +62,11 @@ defmodule Trie do
     key_trie = key
                |> from_key
 
+    merge_key_trie(trie, key_trie)
+  end
+
+  def merge_key_trie(trie, key_trie) do
+
     curr_level = find_bifurcation(trie, key_trie)
 
     if curr_level == nil do
@@ -175,9 +180,8 @@ defmodule Trie do
   Input keys traverse the tree with 0 for left and 1 for right.
   """
   def from_keys(input_key_list, trie \\ nil) when is_list(input_key_list) do
-    {head_el, rest} = List.pop_at(input_key_list, 0)
-    t = from_key(head_el)
-    [t | rest] |> Enum.reduce(fn(val, trie) -> Trie.merge(trie, val)  end)
+    trie_list = input_key_list |> Enum.map(fn(key)-> Trie.from_key(key) end)
+    Enum.reduce(trie_list,  fn(val, trie) -> Trie.merge_key_trie(trie, val)  end)
   end
 
   @doc """
