@@ -18,14 +18,14 @@ defmodule TrieTest do
     end
   end
 
-  describe "binary_as_array/1" do
+  describe "binary_as_trie/1" do
     test "it can print out a node as a trie fragment (missing leaf node)" do
-      assert <<1::1, 0::1>> |> Trie.binary_as_array |> Trie.as_list == [[{1, 0}]]
-      assert <<0::1, 0::1>> |> Trie.binary_as_array |> Trie.as_list == [[{0, 0}]]
+      assert <<1::1, 0::1>> |> Trie.binary_as_trie |> Trie.as_list == [[{1, 0}]]
+      assert <<0::1, 0::1>> |> Trie.binary_as_trie |> Trie.as_list == [[{0, 0}]]
 
-      # examine a raw array entry
-      arr = <<0::1, 0::1>> |> Trie.binary_as_array
-      assert :array.get(0, arr) == {1, <<0::size(2)>>}
+      # examine a rawtrie entry
+      arr = <<0::1, 0::1>> |> Trie.binary_as_trie
+      assert Enum.at(arr, 0) == {1, <<0::size(2)>>}
     end
   end
 
@@ -124,7 +124,7 @@ defmodule TrieTest do
 
       assert Trie.find_bifurcation(base_trie, key_trie) == 8
       # Here we are seeing the bifurcation just after the end of the current trie on the leaf node
-      assert 9 == :array.size(base_trie)
+      assert 9 == length(base_trie)
     end
 
   end
