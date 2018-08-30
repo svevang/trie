@@ -89,7 +89,7 @@ defmodule Trie do
     trie
   end
 
-  def modify_trie(trie, curr_level, modified_level) do
+  def merge_level(trie, curr_level, modified_level) do
     trie = if curr_level >= length(trie) do
       trie ++ [modified_level]
     else
@@ -107,7 +107,7 @@ defmodule Trie do
 
     modified_level = modify_level(trie, curr_level, List.first(key_head))
 
-    trie = modify_trie(trie, curr_level, modified_level)
+    trie = merge_level(trie, curr_level, modified_level)
 
     do_merge(trie, rest_key, curr_level + 1)
 
