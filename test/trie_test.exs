@@ -25,7 +25,7 @@ defmodule TrieTest do
 
       # examine a rawtrie entry
       arr = <<0::1, 0::1>> |> Trie.binary_as_trie
-      assert Enum.at(arr, 0) == {1, <<0::size(2)>>}
+      assert Trie.at(arr, 0) == {1, <<0::size(2)>>}
     end
   end
 
@@ -73,7 +73,7 @@ defmodule TrieTest do
         Trie.find_node(trie, 9, 0)
       end)
       assert_raise(ArgumentError, fn() ->
-        Trie.find_node([], 0, 0)
+        Trie.find_node(%{}, 0, 0)
       end)
     end
   end
@@ -124,7 +124,7 @@ defmodule TrieTest do
 
       assert Trie.find_bifurcation(base_trie, key_trie) == 8
       # Here we are seeing the bifurcation just after the end of the current trie on the leaf node
-      assert 9 == length(base_trie)
+      assert 9 == Trie.size(base_trie)
     end
 
   end

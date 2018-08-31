@@ -35,7 +35,7 @@ defmodule Trie do
     res = if curr_node == @leaf_node do
       [accum]
     else
-      prev_children = Enum.at(trie, curr_level)
+      prev_children = Trie.at(trie, curr_level)
       |> outbound_links(j_node)
       <<lhs::integer-size(1), rhs::integer-size(1)>> = curr_node
 
@@ -73,7 +73,7 @@ defmodule Trie do
       trie
     else
 
-      if curr_level > length(trie) do
+      if curr_level > Trie.size(trie) do
         raise "bifucation cannot occur after the longest key in trie"
       end
 
@@ -85,7 +85,7 @@ defmodule Trie do
   end
 
   def merge_level(trie, key_trie, curr_level) do
-    if curr_level == length(key_trie) do
+    if curr_level == Trie.size(key_trie) do
       trie
     else
       node_to_append = find_node(key_trie, curr_level, 0)
@@ -95,27 +95,19 @@ defmodule Trie do
   end
 
 
-  def resize_for_level(trie, i_level) do
-    if i_level == length(trie) do
-      trie ++ [{0, <<>>}]
-    else
-      trie
-    end
-  end
-
   def append_node(trie, i_level, node_to_append) do
     trie = resize_for_level(trie, i_level)
 
-    {ct, bits} = Enum.at(trie, i_level)
+    {ct, bits} = Trie.at(trie, i_level)
 
     level_bit_size = ct * @node_bit_size
     new_level = {ct + 1, <<bits::bitstring-size(level_bit_size), node_to_append::bitstring-size(@node_bit_size)>> }
-    List.replace_at(trie, i_level, new_level)
+    Trie.replace_at(trie, i_level, new_level)
   end
 
   def set_both_branch_node(trie, i_level) do
     trie = resize_for_level(trie, i_level)
-    {ct, bits} = Enum.at(trie, i_level)
+    {ct, bits} = Trie.at(trie, i_level)
     bit_offset = if ct == 0 do
       0
     else
@@ -128,7 +120,7 @@ defmodule Trie do
     with_node = @both_branch_node
     
     new_level = {ct, <<leading_nodes::bitstring-size(bit_offset), with_node::bitstring-size(@node_bit_size)>> }
-    List.replace_at(trie, i_level, new_level)
+    Trie.replace_at(trie, i_level, new_level)
   end
 
 
@@ -138,11 +130,11 @@ defmodule Trie do
 
 
     cond do
-      curr_level == length(key_trie) ->
+      curr_level == Trie.size(key_trie) ->
         nil
-      curr_level < length(key_trie) ->
-        last_node_of_trie = if curr_level < length(trie) do
-          {node_count, _} = Enum.at(trie, curr_level)
+      curr_level < Trie.size(key_trie) ->
+        last_node_of_trie = if curr_level < Trie.size(trie) do
+          {node_count, _} = Trie.at(trie, curr_level)
           find_node(trie, curr_level, node_count - 1)
         else
           nil
@@ -204,37 +196,10 @@ defmodule Trie do
     binary_from_key(rest, acc)
   end
 
-  @doc """
-  There are two representations here: a packed binary tree (suitable for
-  storage) and a list oriented form (suitable for processing). This method
-  coverts from the binary form to the list form.
-  """
-  def binary_as_trie(trie) do
-    array_len = Kernel.trunc(bit_size(trie) / 2.0)
-    do_as_array(trie, 0, 1, [])
-  end
-
-  defp do_as_array(trie_fragment, level_index, j_nodes_curr_level, accum) when bit_size(trie_fragment) == 0 do
-    Enum.reverse(accum)
-  end
-
-  defp do_as_array(trie_fragment, level_index, j_nodes_curr_level, accum) do
-
-    trie_level_slice_size = j_nodes_curr_level * @node_bit_size
-
-    << trie_level_slice::bitstring-size(trie_level_slice_size), rest_trie::bitstring >> = << trie_fragment::bitstring >>
-
-    j_children_counts = length(for <<b :: 1 <- <<trie_level_slice::bitstring-size(trie_level_slice_size)>>  >>, b > 0, do: b)
-
-    do_as_array(rest_trie,
-               level_index + 1,
-               j_children_counts,
-               [{j_nodes_curr_level, trie_level_slice}| accum])
-  end
-
   def as_list(trie) do
-    trie
-    |> Enum.map(fn({size, level_bitstring}) ->
+    (0..(Trie.size(trie) - 1))
+    |> Enum.map(fn(i) ->
+      {size, level_bitstring} = Trie.at(trie, i)
       do_as_list(level_bitstring, size)
     end)
   end
@@ -258,12 +223,12 @@ defmodule Trie do
 
   def find_node(trie, target_level, j_node) do
     cond do
-      length(trie) == 0 ->
+      Trie.size(trie) == 0 ->
         raise ArgumentError, message: "Trie must not be empty."
-      target_level >= length(trie) ->
+      target_level >= Trie.size(trie) ->
         raise ArgumentError, message: "target_level exceed the len of the longest key."
       true ->
-        level = Enum.at(trie, target_level)
+        level = Trie.at(trie, target_level)
         find_node_on_level(level, j_node)
 
     end
@@ -296,6 +261,51 @@ defmodule Trie do
     trailing = bit_size(bin) - leading - 1
     <<_::size(leading), target_bit::size(1), _::size(trailing) >> = bin
     target_bit
+  end
+
+  # REPR
+
+  def at(trie, index) do
+    trie[index]
+  end
+
+  def size(trie) do
+    map_size(trie)
+  end
+
+  def resize_for_level(trie, i_level) do
+    if i_level == Trie.size(trie) do
+      Trie.replace_at(trie, i_level, {0, <<>>})
+    else
+      trie
+    end
+  end
+
+  def replace_at(trie, i_level, value) do
+    Map.put(trie, i_level, value)
+  end
+
+  def binary_as_trie(trie) do
+    array_len = Kernel.trunc(bit_size(trie) / 2.0)
+    do_as_trie(trie, 0, 1, %{})
+  end
+
+  defp do_as_trie(trie_fragment, level_index, j_nodes_curr_level, accum) when bit_size(trie_fragment) == 0 do
+    accum
+  end
+
+  defp do_as_trie(trie_fragment, level_index, j_nodes_curr_level, accum) do
+
+    trie_level_slice_size = j_nodes_curr_level * @node_bit_size
+
+    << trie_level_slice::bitstring-size(trie_level_slice_size), rest_trie::bitstring >> = << trie_fragment::bitstring >>
+
+    j_children_counts = length(for <<b :: 1 <- <<trie_level_slice::bitstring-size(trie_level_slice_size)>>  >>, b > 0, do: b)
+
+    do_as_trie(rest_trie,
+               level_index + 1,
+               j_children_counts,
+               Trie.replace_at(accum, level_index, {j_nodes_curr_level, trie_level_slice}) )
   end
 
 end
