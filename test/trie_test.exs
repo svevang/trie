@@ -14,18 +14,18 @@ defmodule TrieTest do
   describe "append_node/2" do
     test "it can append a node to a trie's level" do
       a_byte = <<97>>
-      assert (Trie.from_key(a_byte)) |> Trie.append_node(0, <<0::1, 0::1>>) |> Trie.as_list == [[{1, 0}, {0, 0}], [{0, 1}], [{0, 1}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{0, 1}], [{0, 0}]]
+      assert (Trie.from_key(a_byte)) |> Trie.append_node(0, <<0::8, 0::8>>) |> Trie.as_list == [[{1, 0}, {0, 0}], [{0, 1}], [{0, 1}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{0, 1}], [{0, 0}]]
     end
   end
 
   describe "binary_as_trie/1" do
     test "it can print out a node as a trie fragment (missing leaf node)" do
-      assert <<1::1, 0::1>> |> Trie.binary_as_trie |> Trie.as_list == [[{1, 0}]]
-      assert <<0::1, 0::1>> |> Trie.binary_as_trie |> Trie.as_list == [[{0, 0}]]
+      assert <<1::8, 0::8>> |> Trie.binary_as_trie |> Trie.as_list == [[{1, 0}]]
+      assert <<0::8, 0::8>> |> Trie.binary_as_trie |> Trie.as_list == [[{0, 0}]]
 
       # examine a rawtrie entry
-      arr = <<0::1, 0::1>> |> Trie.binary_as_trie
-      assert Trie.at(arr, 0) == {1, <<0::size(2)>>}
+      arr = <<0::8, 0::8>> |> Trie.binary_as_trie
+      assert Trie.at(arr, 0) == {1, <<0, 0>>}
     end
   end
 
@@ -61,8 +61,8 @@ defmodule TrieTest do
       key_byte = <<1::1, 0::1, 0::1, 0::1, 1::1, 0::1, 0::1, 0::1>>
       trie = Trie.from_key(key_byte)
 
-      assert Trie.find_node(trie, 0, 0) == <<1::size(2)>>
-      assert Trie.find_node(trie, 1, 0) == <<2::size(2)>>
+      assert Trie.find_node(trie, 0, 0) == <<0, 1>>
+      assert Trie.find_node(trie, 1, 0) == <<1, 0>>
     end
 
     test "checks bounds" do
@@ -195,7 +195,7 @@ defmodule TrieTest do
 
   describe "outbound_links/2" do
     test "sums outbound_links previous to this node" do
-      assert Trie.outbound_links({4, <<0::2, 1::2, 2::2, 0::2>>}, 3) == 2
+      assert Trie.outbound_links({4, <<0::8, 0::8, 0::8, 1::8, 1::8, 0::8, 0::8, 0::8>>}, 3) == 2
 
     end
   end
