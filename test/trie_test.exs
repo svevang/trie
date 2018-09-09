@@ -3,27 +3,46 @@ defmodule TrieTest do
   doctest Trie
 
 
-  describe "binary_as_list/1" do
-    test "it can print out a node as a single node trie" do
-      assert <<1::1, 0::1>> |> Trie.binary_as_list == [[{1, 0}]]
-      assert <<0::1, 0::1>> |> Trie.binary_as_list == [[{0, 0}]]
+  describe "set_both_branch_node/2" do
+    test "it can replace a level's last node in a trie" do
+      a_byte = <<97>>
+      assert (Trie.from_key(a_byte)) |> Trie.set_both_branch_node(0) |> Trie.as_list == [[{1, 1}], [{0, 1}], [{0, 1}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{0, 1}], [{0, 0}]]
+      assert (Trie.from_key(a_byte)) |> Trie.set_both_branch_node(1) |> Trie.as_list == [[{1, 0}], [{1, 1}], [{0, 1}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{0, 1}], [{0, 0}]]
+    end
+  end
+
+  describe "append_node/2" do
+    test "it can append a node to a trie's level" do
+      a_byte = <<97>>
+      assert (Trie.from_key(a_byte)) |> Trie.append_node(0, <<0::8, 0::8>>) |> Trie.as_list == [[{1, 0}, {0, 0}], [{0, 1}], [{0, 1}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{0, 1}], [{0, 0}]]
+    end
+  end
+
+  describe "binary_as_trie/1" do
+    test "it can print out a node as a trie fragment (missing leaf node)" do
+      assert <<1::8, 0::8>> |> Trie.binary_as_trie |> Trie.as_list == [[{1, 0}]]
+      assert <<0::8, 0::8>> |> Trie.binary_as_trie |> Trie.as_list == [[{0, 0}]]
+
+      # examine a rawtrie entry
+      arr = <<0::8, 0::8>> |> Trie.binary_as_trie
+      assert Trie.at(arr, 0) == {1, <<0, 0>>}
     end
   end
 
   describe "from_key/1" do
     test "Sets up a new trie" do
       a_byte = <<97>>
-      assert (Trie.from_key(a_byte)) == [[{1, 0}], [{0, 1}], [{0, 1}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{0, 1}], [{0, 0}]]
+      assert (Trie.from_key(a_byte)) |> Trie.as_list == [[{1, 0}], [{0, 1}], [{0, 1}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{0, 1}], [{0, 0}]]
     end
 
     test "empty byte" do
       all_zero_byte = <<0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1>>
-      assert (Trie.from_key(all_zero_byte)) == [[{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{0, 0}]]
+      assert (Trie.from_key(all_zero_byte)) |> Trie.as_list == [[{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{0, 0}]]
     end
 
     test "filled byte" do
       all_one_byte = <<1::1, 1::1, 1::1, 1::1, 1::1, 1::1, 1::1, 1::1>>
-      assert (Trie.from_key(all_one_byte)) == [[{0, 1}], [{0, 1}], [{0, 1}], [{0, 1}], [{0, 1}], [{0, 1}], [{0, 1}], [{0, 1}], [{0, 0}]]
+      assert (Trie.from_key(all_one_byte)) |> Trie.as_list == [[{0, 1}], [{0, 1}], [{0, 1}], [{0, 1}], [{0, 1}], [{0, 1}], [{0, 1}], [{0, 1}], [{0, 0}]]
     end
 
     test "only accepts keys composed of whole bytes" do
@@ -42,8 +61,8 @@ defmodule TrieTest do
       key_byte = <<1::1, 0::1, 0::1, 0::1, 1::1, 0::1, 0::1, 0::1>>
       trie = Trie.from_key(key_byte)
 
-      assert Trie.find_node(trie, 0, 0) == {0, 1}
-      assert Trie.find_node(trie, 1, 0) == {1, 0}
+      assert Trie.find_node(trie, 0, 0) == <<0, 1>>
+      assert Trie.find_node(trie, 1, 0) == <<1, 0>>
     end
 
     test "checks bounds" do
@@ -54,7 +73,7 @@ defmodule TrieTest do
         Trie.find_node(trie, 9, 0)
       end)
       assert_raise(ArgumentError, fn() ->
-        Trie.find_node([], 0, 0)
+        Trie.find_node(%{}, 0, 0)
       end)
     end
   end
@@ -103,9 +122,9 @@ defmodule TrieTest do
       base_trie =  Trie.from_key(base_byte)
       key_trie =  Trie.from_key(key_byte)
 
-      assert Trie.find_bifurcation(base_trie, key_trie) == 9
-      #Here we are seeing the bifurcation just after the end of the current trie
-      assert 9 == length(base_trie)
+      assert Trie.find_bifurcation(base_trie, key_trie) == 8
+      # Here we are seeing the bifurcation just after the end of the current trie on the leaf node
+      assert 9 == Trie.size(base_trie)
     end
 
   end
@@ -117,7 +136,7 @@ defmodule TrieTest do
       all_zero_byte = <<0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1>>
       # [[{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}]]
       trie = Trie.from_key(all_zero_byte) 
-      assert Trie.merge(trie, all_one_byte) == [[{1, 1}],
+      assert Trie.merge(trie, all_one_byte)|> Trie.as_list == [[{1, 1}],
                                                 [{1, 0}, {0, 1}],
                                                 [{1, 0}, {0, 1}],
                                                 [{1, 0}, {0, 1}],
@@ -134,7 +153,7 @@ defmodule TrieTest do
       all_zero_byte = <<0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1>>
       # [[{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}]]
       trie = Trie.from_key(all_zero_byte) 
-      assert Trie.merge(trie, all_one_byte <> all_one_byte) == [
+      assert Trie.merge(trie, all_one_byte <> all_one_byte) |> Trie.as_list == [
         [{1, 1}],
         [{1, 0}, {0, 1}],
         [{1, 0}, {0, 1}],
@@ -156,11 +175,15 @@ defmodule TrieTest do
 
     test "merging a key already in the trie does nothing" do
 
-      assert Trie.from_key("asdf")
-      |> Trie.merge("qwer")
-      |> Trie.merge("qwer") ==
-        Trie.from_key("asdf")
-        |> Trie.merge("qwer")
+      all_one_byte = <<1::1, 1::1, 1::1, 1::1, 1::1, 1::1, 1::1, 1::1>>
+      all_zero_byte = <<0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1>>
+
+      assert Trie.from_key(all_zero_byte)
+      |> Trie.merge(all_one_byte)
+      |> Trie.merge(all_one_byte) |> Trie.as_list ==
+        Trie.from_key(all_zero_byte)
+        |> Trie.merge(all_one_byte)
+        |> Trie.as_list 
 
     end
 
@@ -172,9 +195,8 @@ defmodule TrieTest do
 
   describe "outbound_links/2" do
     test "sums outbound_links previous to this node" do
-      assert Trie.outbound_links([{0, 0}, {0, 1}, {1, 0}, {0, 0}], 3) == 2
-      assert Trie.outbound_links([{1, 1}, {1, 0}, {0, 1}, {1, 1}], 3) == 4
-      assert Trie.outbound_links([{1, 1}], 0) == 0
+      assert Trie.outbound_links({4, <<0::8, 0::8, 0::8, 1::8, 1::8, 0::8, 0::8, 0::8>>}, 3) == 2
+
     end
   end
 
