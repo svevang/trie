@@ -36,41 +36,45 @@ defmodule Trie do
     if curr_node == @leaf_node do
       [accum]
     else
-      prev_children = Trie.at(trie, curr_level)
-      |> outbound_links(j_node)
+      prev_children =
+        Trie.at(trie, curr_level)
+        |> outbound_links(j_node)
+
       <<lhs::integer-size(@branch_bit_size), rhs::integer-size(@branch_bit_size)>> = curr_node
 
-      branch_results = if lhs == 1 do
-        iter_tree(trie, curr_level + 1, prev_children, <<accum::bitstring, 0::size(1)>>)
-      else
-        []
-      end
+      branch_results =
+        if lhs == 1 do
+          iter_tree(trie, curr_level + 1, prev_children, <<accum::bitstring, 0::size(1)>>)
+        else
+          []
+        end
 
-      branch_results = branch_results ++ if rhs == 1 do
-        iter_tree(trie, curr_level + 1, prev_children + lhs, <<accum::bitstring, 1::size(1)>>)
-      else
-        []
-      end
+      branch_results =
+        branch_results ++
+          if rhs == 1 do
+            iter_tree(trie, curr_level + 1, prev_children + lhs, <<accum::bitstring, 1::size(1)>>)
+          else
+            []
+          end
 
       branch_results
     end
   end
 
   def merge(trie, key) do
-    key_trie = key
-               |> from_key
+    key_trie =
+      key
+      |> from_key
 
     merge_key_trie(trie, key_trie)
   end
 
   def merge_key_trie(trie, key_trie) do
-
     curr_level = find_bifurcation(trie, key_trie)
 
     if curr_level == nil do
       trie
     else
-
       if curr_level > Trie.size(trie) do
         raise "bifucation cannot occur after the longest key in trie"
       end
@@ -79,7 +83,6 @@ defmodule Trie do
 
       merge_level(trie, key_trie, curr_level + 1)
     end
-
   end
 
   def merge_level(trie, key_trie, curr_level) do
@@ -92,51 +95,60 @@ defmodule Trie do
     end
   end
 
-
   def append_node(trie, i_level, node_to_append) do
     trie = resize_for_level(trie, i_level)
 
     {ct, bits} = Trie.at(trie, i_level)
 
     level_bit_size = ct * @node_bit_size
-    new_level = {ct + 1, <<bits::bitstring-size(level_bit_size), node_to_append::bitstring-size(@node_bit_size)>> }
+
+    new_level =
+      {ct + 1,
+       <<bits::bitstring-size(level_bit_size), node_to_append::bitstring-size(@node_bit_size)>>}
+
     Trie.replace_at(trie, i_level, new_level)
   end
 
   def set_both_branch_node(trie, i_level) do
     trie = resize_for_level(trie, i_level)
     {ct, bits} = Trie.at(trie, i_level)
-    bit_offset = if ct == 0 do
-      0
-    else
-      (ct - 1) * @node_bit_size
-    end
+
+    bit_offset =
+      if ct == 0 do
+        0
+      else
+        (ct - 1) * @node_bit_size
+      end
 
     total_bits = ct * @node_bit_size
-    << leading_nodes::bitstring-size(bit_offset), _skip_node::@node_bit_size >> = << bits::bitstring-size(total_bits) >>
+
+    <<leading_nodes::bitstring-size(bit_offset), _skip_node::@node_bit_size>> =
+      <<bits::bitstring-size(total_bits)>>
 
     with_node = @both_branch_node
-    
-    new_level = {ct, <<leading_nodes::bitstring-size(bit_offset), with_node::bitstring-size(@node_bit_size)>> }
+
+    new_level =
+      {ct,
+       <<leading_nodes::bitstring-size(bit_offset), with_node::bitstring-size(@node_bit_size)>>}
+
     Trie.replace_at(trie, i_level, new_level)
   end
-
 
   def find_bifurcation(trie, key_trie, curr_level \\ 0)
 
   def find_bifurcation(trie, key_trie, curr_level) do
-
-
     cond do
       curr_level == Trie.size(key_trie) ->
         nil
+
       curr_level < Trie.size(key_trie) ->
-        last_node_of_trie = if curr_level < Trie.size(trie) do
-          {node_count, _} = Trie.at(trie, curr_level)
-          find_node(trie, curr_level, node_count - 1)
-        else
-          nil
-        end
+        last_node_of_trie =
+          if curr_level < Trie.size(trie) do
+            {node_count, _} = Trie.at(trie, curr_level)
+            find_node(trie, curr_level, node_count - 1)
+          else
+            nil
+          end
 
         curr_node_key_trie = find_node(key_trie, curr_level, 0)
 
@@ -145,7 +157,8 @@ defmodule Trie do
         <<_::bitstring-size(8), t2::bitstring-size(8)>> = last_node_of_trie
         <<_::bitstring-size(8), k2::bitstring-size(8)>> = curr_node_key_trie
 
-        key_bifurcates_trie = (k2 != t2) || (last_node_of_trie == @leaf_node && curr_node_key_trie != @leaf_node)
+        key_bifurcates_trie =
+          k2 != t2 || (last_node_of_trie == @leaf_node && curr_node_key_trie != @leaf_node)
 
         if key_exceeds_length_of_trie || key_bifurcates_trie do
           curr_level
@@ -160,8 +173,8 @@ defmodule Trie do
   Input keys traverse the tree with 0 for left and 1 for right.
   """
   def from_keys(input_key_list) when is_list(input_key_list) do
-    trie_list = input_key_list |> Enum.map(fn(key)-> Trie.from_key(key) end)
-    Enum.reduce(trie_list,  fn(val, trie) -> Trie.merge_key_trie(trie, val)  end)
+    trie_list = input_key_list |> Enum.map(fn key -> Trie.from_key(key) end)
+    Enum.reduce(trie_list, fn val, trie -> Trie.merge_key_trie(trie, val) end)
   end
 
   @doc """
@@ -182,44 +195,26 @@ defmodule Trie do
 
   def binary_from_key(input_key, key_bit_len, acc \\ <<>>)
 
-  # done recursing
   def binary_from_key(<<>>, 0, acc) do
-
-    << acc::bitstring, @leaf_node::bitstring >>
+    <<acc::bitstring, @leaf_node::bitstring>>
   end
 
-
   def binary_from_key(input_key, key_bit_len, acc) do
-
-    #from_node = case input_key do
-      #<<target_bit::size(8), rest::bitstring>> ->
-      #_ -> acc
-    #end
     rest_bit_len = key_bit_len - 1
     <<target_bit::size(1), rest::bitstring-size(rest_bit_len)>> = input_key
 
-    #case input_key do
-      #<<target_bit::size(8), rest::bitstring>> ->
-        #case target_bit do
-          #1 -> << acc::bitstring, @right_branch_node::bitstring >>
-          #0 -> << acc::bitstring, @left_branch_node::bitstring >>
-
-        #end
-    #end
-
-    #require IEx
-    #IEx.pry
-    acc = case target_bit do
-      1 -> << acc::bitstring, @right_branch_node::bitstring >>
-      0 -> << acc::bitstring, @left_branch_node::bitstring >>
-    end
+    acc =
+      case target_bit do
+        1 -> <<acc::bitstring, @right_branch_node::bitstring>>
+        0 -> <<acc::bitstring, @left_branch_node::bitstring>>
+      end
 
     binary_from_key(rest, rest_bit_len, acc)
   end
 
   def as_list(trie) do
-    (0..(Trie.size(trie) - 1))
-    |> Enum.map(fn(i) ->
+    0..(Trie.size(trie) - 1)
+    |> Enum.map(fn i ->
       {size, level_bitstring} = Trie.at(trie, i)
       do_as_list(level_bitstring, size)
     end)
@@ -228,14 +223,18 @@ defmodule Trie do
   defp do_as_list(trie_level_slice, j_nodes_curr_level) do
     trie_level_slice_size = j_nodes_curr_level * @node_bit_size
 
-    nodes_for_level = (for <<b :: @node_bit_size <- <<trie_level_slice::bitstring-size(trie_level_slice_size)>>  >>, do: b)
+    nodes_for_level =
+      for <<(b::@node_bit_size <- <<trie_level_slice::bitstring-size(trie_level_slice_size)>>)>>,
+        do: b
 
-    expanded_nodes = nodes_for_level
-    |> Enum.map(fn(node) ->
-      <<lhs::size(@branch_bit_size), rhs::size(@branch_bit_size)>> = <<node::size(@node_bit_size)>>
-      {lhs, rhs}
-    end)
+    expanded_nodes =
+      nodes_for_level
+      |> Enum.map(fn node ->
+        <<lhs::size(@branch_bit_size), rhs::size(@branch_bit_size)>> =
+          <<node::size(@node_bit_size)>>
 
+        {lhs, rhs}
+      end)
 
     expanded_nodes
   end
@@ -246,12 +245,13 @@ defmodule Trie do
     cond do
       Trie.size(trie) == 0 ->
         raise ArgumentError, message: "Trie must not be empty."
+
       target_level >= Trie.size(trie) ->
         raise ArgumentError, message: "target_level exceed the len of the longest key."
+
       true ->
         level = Trie.at(trie, target_level)
         find_node_on_level(level, j_node)
-
     end
   end
 
@@ -260,7 +260,10 @@ defmodule Trie do
 
     bit_offset = j_node * @node_bit_size
     level_bits = node_count * @node_bit_size
-    <<_offset::bitstring-size(bit_offset), target_node::bitstring-size(@node_bit_size), _rest::bitstring>> = <<bits::bitstring-size(level_bits)>>
+
+    <<_offset::bitstring-size(bit_offset), target_node::bitstring-size(@node_bit_size),
+      _rest::bitstring>> = <<bits::bitstring-size(level_bits)>>
+
     target_node
   end
 
@@ -270,17 +273,18 @@ defmodule Trie do
   iex> Trie.bit_at_index(<<254>>, 7)
   0
   """
-  def bit_at_index(bin, index) when is_binary(bin) == false
-                               when byte_size(bin) == 0
-                               when index < 0
-                               when index >= bit_size(bin) do
+  def bit_at_index(bin, index)
+      when is_binary(bin) == false
+      when byte_size(bin) == 0
+      when index < 0
+      when index >= bit_size(bin) do
     raise "Bad argument"
   end
 
   def bit_at_index(bin, index) do
     leading = index
     trailing = bit_size(bin) - leading - 1
-    <<_::size(leading), target_bit::size(1), _::size(trailing) >> = bin
+    <<_::size(leading), target_bit::size(1), _::size(trailing)>> = bin
     target_bit
   end
 
@@ -315,18 +319,25 @@ defmodule Trie do
   end
 
   defp do_as_trie(trie_fragment, level_index, j_nodes_curr_level, accum, trie_fragment_byte_size) do
-
     trie_level_slice_size = j_nodes_curr_level * @node_bit_size
 
     rest_size = trie_fragment_byte_size - trie_level_slice_size
-    << trie_level_slice::bitstring-size(trie_level_slice_size), rest_trie::bitstring-size(rest_size) >> = << trie_fragment::bitstring >>
 
-    j_children_counts = length(for <<b :: 1 <- <<trie_level_slice::bitstring-size(trie_level_slice_size)>>  >>, b > 0, do: b)
+    <<trie_level_slice::bitstring-size(trie_level_slice_size),
+      rest_trie::bitstring-size(rest_size)>> = <<trie_fragment::bitstring>>
 
-    do_as_trie(rest_trie,
-               level_index + 1,
-               j_children_counts,
-               Trie.replace_at(accum, level_index, {j_nodes_curr_level, trie_level_slice}), rest_size )
+    j_children_counts =
+      length(
+        for <<(b::1 <- <<trie_level_slice::bitstring-size(trie_level_slice_size)>>)>>, b > 0,
+          do: b
+      )
+
+    do_as_trie(
+      rest_trie,
+      level_index + 1,
+      j_children_counts,
+      Trie.replace_at(accum, level_index, {j_nodes_curr_level, trie_level_slice}),
+      rest_size
+    )
   end
-
 end
