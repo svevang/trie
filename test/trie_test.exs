@@ -204,8 +204,15 @@ defmodule TrieTest do
     test "returns a list of all keys in the trie" do
       trie = Trie.from_key("asdf")
       |> Trie.merge("qwer")
-
       assert Trie.all_keys(trie) == ["asdf", "qwer"]
+    end
+
+    test "returns bytes for null and max node" do
+
+      trie = Trie.from_key(<<0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1>>)
+      trie = Trie.merge(trie, <<1::1, 1::1, 1::1, 1::1, 1::1, 1::1, 1::1, 1::1>>)
+
+      assert Trie.all_keys(trie) == [<<0::unsigned-integer-size(8)>>, <<255::unsigned-integer-size(8)>>]
     end
   end
 
