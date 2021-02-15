@@ -61,6 +61,43 @@ defmodule Trie do
     end
   end
 
+  def prefix_search(trie, prefix) do
+    IO.puts "Starting:"
+    IO.inspect all_keys(trie)
+    prefix_search(trie, prefix, 0, 0)
+  end
+
+  defp prefix_search(trie, prefix, curr_level, j_node) when curr_level == bit_size(prefix)  do
+      raise('found prefix')
+  end
+  defp prefix_search(trie, prefix, curr_level, j_node) do
+    curr_node = find_node(trie, curr_level, j_node)
+    <<lhs::integer-size(@branch_bit_size), rhs::integer-size(@branch_bit_size)>> = curr_node
+
+    prev_children =
+      Trie.at(trie, curr_level)
+      |> outbound_links(j_node)
+
+    IO.inspect "bit: #{bit_at_index(prefix, curr_level)} curr:#{curr_level} lhs:#{lhs} rhs:#{rhs}"
+
+    if bit_at_index(prefix, curr_level) == 0 do
+        if lhs == 1 do
+          prefix_search(trie, prefix, curr_level + 1, prev_children)
+        else
+          raise "prefix not found!"
+        end
+    else
+        if rhs == 1 do
+          prefix_search(trie, prefix, curr_level + 1, prev_children)
+        else
+          raise "prefix not found!"
+        end
+    end
+
+
+  end
+
+
   def merge(trie, key) do
     key_trie =
       key
@@ -261,6 +298,7 @@ defmodule Trie do
     bit_offset = j_node * @node_bit_size
     level_bits = node_count * @node_bit_size
 
+    IO.puts "#{node_count} #{bit_offset} #{level_bits}"
     <<_offset::bitstring-size(bit_offset), target_node::bitstring-size(@node_bit_size),
       _rest::bitstring>> = <<bits::bitstring-size(level_bits)>>
 

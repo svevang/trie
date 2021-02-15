@@ -216,7 +216,23 @@ defmodule TrieTest do
     end
   end
 
+  describe "bit_at_index/2" do
+    test 'it returns the bit at an index' do
+      assert Trie.bit_at_index(<<1::1, 0::1, 1::1, 1::1, 1::1, 1::1, 1::1, 1::1>>, 1) == 0
+      assert Trie.bit_at_index(<<1::1, 0::1, 1::1, 1::1, 1::1, 1::1, 1::1, 1::1>>, 0) == 1
+      assert Trie.bit_at_index("pre", 0) == 0
+      assert Trie.bit_at_index("pre", 1) == 1
+      assert Trie.bit_at_index("pre", 2) == 1
+    end
+  end
 
-
-
+  describe "prefix_search/2" do
+    test "returns a list of matching keys based on the prefix" do
+      matches = ~w(Aani Aaron Aaronic Aaronical Aaronite Aaronitic Aaru Ab Ababdeh Ababua)
+              |> Enum.sort
+              |> Trie.from_keys
+              |> Trie.prefix_search("Aar")
+      assert matches == ~w(Aaron Aaronic Aaronical Aaronite Aaronitic Aaru)
+    end
+  end
 end
