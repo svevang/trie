@@ -209,9 +209,17 @@ defmodule Trie do
   Given a list of Elixir binaries, return a trie representation whose bits are edges in a binary tree.
   Input keys traverse the tree with 0 for left and 1 for right.
   """
-  def from_keys(input_key_list) when is_list(input_key_list) do
-    trie_list = input_key_list |> Enum.map(fn key -> Trie.from_key(key) end)
-    Enum.reduce(trie_list, fn val, trie -> Trie.merge_key_trie(trie, val) end)
+  def from_keys([head | tail] = input_key_list) when is_list(input_key_list) do
+    do_from_keys(tail, Trie.from_key(head))
+  end
+
+
+  defp do_from_keys([head | tail], trie) do
+    do_from_keys(tail, Trie.merge(trie, head))
+  end
+
+  defp do_from_keys([], trie) do
+    trie
   end
 
   @doc """
@@ -298,7 +306,6 @@ defmodule Trie do
     bit_offset = j_node * @node_bit_size
     level_bits = node_count * @node_bit_size
 
-    IO.puts "#{node_count} #{bit_offset} #{level_bits}"
     <<_offset::bitstring-size(bit_offset), target_node::bitstring-size(@node_bit_size),
       _rest::bitstring>> = <<bits::bitstring-size(level_bits)>>
 
