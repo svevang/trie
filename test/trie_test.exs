@@ -207,6 +207,12 @@ defmodule TrieTest do
       assert Trie.all_keys(trie) == ["asdf", "qwer"]
     end
 
+    test "handles keys of a single byte" do
+      trie = Trie.from_key("A")
+      |> Trie.merge("qwer")
+      assert Trie.all_keys(trie) == ["A", "qwer"]
+    end
+
     test "returns bytes for null and max node" do
 
       trie = Trie.from_key(<<0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1>>)
@@ -228,6 +234,12 @@ defmodule TrieTest do
 
   describe "prefix_search/2" do
     test "returns a list of matching keys based on the prefix" do
+
+
+      trie = ~w(Aani Aaron Aaronic Aaronical Aaronite Aaronitic Aaru Ab Ababdeh Ababua)
+             |> Enum.sort
+             |> Trie.from_keys
+
       matches = ~w(Aani Aaron Aaronic Aaronical Aaronite Aaronitic Aaru Ab Ababdeh Ababua)
               |> Enum.sort
               |> Trie.from_keys
