@@ -235,15 +235,18 @@ defmodule TrieTest do
   describe "prefix_search/2" do
     test "returns a list of matching keys based on the prefix" do
 
+      keys = ~w(Aani Aaron Aaronic Aaronical Aaronite Aaronitic Aaru Ab Ababdeh Ababua)
 
-      trie = ~w(Aani Aaron Aaronic Aaronical Aaronite Aaronitic Aaru Ab Ababdeh Ababua)
+
+      trie = keys
              |> Enum.sort
              |> Trie.from_keys
 
-      matches = ~w(Aani Aaron Aaronic Aaronical Aaronite Aaronitic Aaru Ab Ababdeh Ababua)
+      matches = keys
               |> Enum.sort
               |> Trie.from_keys
               |> Trie.prefix_search("Aar")
+      # ["ni", "ronic", <<114, 111, 110, 233, 99, 97, 108>>, "ru"]
       assert matches == ~w(Aaron Aaronic Aaronical Aaronite Aaronitic Aaru)
     end
   end

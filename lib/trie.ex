@@ -62,13 +62,11 @@ defmodule Trie do
   end
 
   def prefix_search(trie, prefix) do
-    IO.puts "Starting:"
-    IO.inspect all_keys(trie)
     prefix_search(trie, prefix, 0, 0)
   end
 
   defp prefix_search(trie, prefix, curr_level, j_node) when curr_level == bit_size(prefix)  do
-      raise('found prefix')
+    iter_tree(trie, curr_level, j_node, prefix)
   end
   defp prefix_search(trie, prefix, curr_level, j_node) do
     curr_node = find_node(trie, curr_level, j_node)
@@ -77,8 +75,6 @@ defmodule Trie do
     prev_children =
       Trie.at(trie, curr_level)
       |> outbound_links(j_node)
-
-    IO.inspect "bit: #{bit_at_index(prefix, curr_level)} curr:#{curr_level} lhs:#{lhs} rhs:#{rhs}"
 
     if bit_at_index(prefix, curr_level) == 0 do
         if lhs == 1 do
