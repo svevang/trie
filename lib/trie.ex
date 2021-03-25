@@ -88,7 +88,7 @@ defmodule Trie do
         end
     else
         if rhs == 1 do
-          prefix_search(trie, prefix, curr_level + 1, prev_children)
+          prefix_search(trie, prefix, curr_level + 1, prev_children + lhs)
         else
           raise "prefix not found!"
         end
