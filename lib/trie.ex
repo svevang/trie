@@ -112,7 +112,8 @@ defmodule Trie do
         raise "bifucation cannot occur after the longest key in trie"
       end
 
-      trie = set_both_branch_node(trie, curr_level)
+      key_node = find_node(key_trie, curr_level, 0)
+      trie = set_branch_node(trie, curr_level, key_node)
 
       merge_level(trie, key_trie, curr_level + 1)
     end
@@ -142,7 +143,7 @@ defmodule Trie do
     Trie.replace_at(trie, i_level, new_level)
   end
 
-  def set_both_branch_node(trie, i_level) do
+  def set_branch_node(trie, i_level, key_node) do
     trie = resize_for_level(trie, i_level)
     {ct, bits} = Trie.at(trie, i_level)
 
@@ -158,7 +159,11 @@ defmodule Trie do
     <<leading_nodes::bitstring-size(bit_offset), _skip_node::@node_bit_size>> =
       <<bits::bitstring-size(total_bits)>>
 
-    with_node = @both_branch_node
+    with_node = if bits == @leaf_node do
+      key_node
+    else
+      @both_branch_node
+    end
 
     new_level =
       {ct,

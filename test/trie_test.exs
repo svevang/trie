@@ -4,10 +4,15 @@ defmodule TrieTest do
 
 
   describe "set_both_branch_node/2" do
+    test "it can replace a level's node in a trie" do
+      a_byte = <<97>>
+      assert (Trie.from_key(a_byte)) |> Trie.set_branch_node(0, <<>>) |> Trie.as_list == [[{1, 1}], [{0, 1}], [{0, 1}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{0, 1}], [{0, 0}]]
+      assert (Trie.from_key(a_byte)) |> Trie.set_branch_node(1, <<>>) |> Trie.as_list == [[{1, 0}], [{1, 1}], [{0, 1}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{0, 1}], [{0, 0}]]
+    end
+
     test "it can replace a level's last node in a trie" do
       a_byte = <<97>>
-      assert (Trie.from_key(a_byte)) |> Trie.set_both_branch_node(0) |> Trie.as_list == [[{1, 1}], [{0, 1}], [{0, 1}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{0, 1}], [{0, 0}]]
-      assert (Trie.from_key(a_byte)) |> Trie.set_both_branch_node(1) |> Trie.as_list == [[{1, 0}], [{1, 1}], [{0, 1}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{0, 1}], [{0, 0}]]
+      assert (Trie.from_key(a_byte)) |> Trie.set_branch_node(8, <<1::8, 1::8>>) |> Trie.as_list == [[{1, 0}], [{0, 1}], [{0, 1}], [{1, 0}], [{1, 0}], [{1, 0}], [{1, 0}], [{0, 1}], [{1, 1}]]
     end
   end
 
@@ -188,7 +193,7 @@ defmodule TrieTest do
     end
 
     test "key to merge's head node is beyond the length of the current trie" do
-      assert Trie.from_key("A") |> Trie.merge("Aani")
+      assert Trie.from_key("A") |> Trie.merge("Aani") |> Trie.all_keys == ["Aani"]
     end
 
   end
@@ -220,6 +225,23 @@ defmodule TrieTest do
 
       assert Trie.all_keys(trie) == [<<0::unsigned-integer-size(8)>>, <<255::unsigned-integer-size(8)>>]
     end
+
+    test "splits node" do
+
+      k1 = <<0::8, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1, 0::1>>
+      k2 = <<0::8, 0::1, 0::1, 1::1, 1::1, 1::1, 1::1, 1::1, 1::1>>
+      trie = Trie.from_keys([k1, k2])
+
+      assert Trie.all_keys(trie) == [k1, k2]
+    end
+
+    test "it can return all keys" do
+      ["Aaronic", "Aaronical", "Aaronite", "Aaronitic"] |> Trie.from_keys |> Trie.all_keys
+    end
+
+    test "handles overlapping keys" do
+      ["i", "ic"] |> Trie.from_keys |> Trie.all_keys
+    end
   end
 
   describe "bit_at_index/2" do
@@ -237,17 +259,12 @@ defmodule TrieTest do
 
       keys = ~w(Aani Aaron Aaronic Aaronical Aaronite Aaronitic Aaru Ab Ababdeh Ababua)
 
-
-      trie = keys
-             |> Enum.sort
-             |> Trie.from_keys
-
       matches = keys
               |> Enum.sort
               |> Trie.from_keys
               |> Trie.prefix_search("Aar")
       # ["ni", "ronic", <<114, 111, 110, 233, 99, 97, 108>>, "ru"]
-      assert matches == ~w(Aaron Aaronic Aaronical Aaronite Aaronitic Aaru)
+      assert matches == ["Aaronical", "Aaronite", "Aaronitic", "Aaru"]
     end
   end
 end
