@@ -28,7 +28,7 @@ defmodule TrieTest do
       assert <<1::8, 0::8>> |> Trie.binary_as_trie |> Trie.as_list == [[{1, 0}]]
       assert <<0::8, 0::8>> |> Trie.binary_as_trie |> Trie.as_list == [[{0, 0}]]
 
-      # examine a rawtrie entry
+      # examine a raw trie entry
       arr = <<0::8, 0::8>> |> Trie.binary_as_trie
       assert Trie.at(arr, 0) == {1, <<0, 0>>}
     end
