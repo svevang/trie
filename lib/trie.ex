@@ -65,9 +65,10 @@ defmodule Trie do
     prefix_search(trie, prefix, 0, 0)
   end
 
-  defp prefix_search(trie, prefix, curr_level, j_node) when curr_level == bit_size(prefix)  do
+  defp prefix_search(trie, prefix, curr_level, j_node) when curr_level == bit_size(prefix) do
     iter_tree(trie, curr_level, j_node, prefix)
   end
+
   defp prefix_search(trie, prefix, curr_level, j_node) do
     curr_node = find_node(trie, curr_level, j_node)
     <<lhs::integer-size(@branch_bit_size), rhs::integer-size(@branch_bit_size)>> = curr_node
@@ -77,22 +78,19 @@ defmodule Trie do
       |> outbound_links(j_node)
 
     if bit_at_index(prefix, curr_level) == 0 do
-        if lhs == 1 do
-          prefix_search(trie, prefix, curr_level + 1, prev_children)
-        else
-          raise "prefix not found!"
-        end
+      if lhs == 1 do
+        prefix_search(trie, prefix, curr_level + 1, prev_children)
+      else
+        raise "prefix not found!"
+      end
     else
-        if rhs == 1 do
-          prefix_search(trie, prefix, curr_level + 1, prev_children + lhs)
-        else
-          raise "prefix not found!"
-        end
+      if rhs == 1 do
+        prefix_search(trie, prefix, curr_level + 1, prev_children + lhs)
+      else
+        raise "prefix not found!"
+      end
     end
-
-
   end
-
 
   def merge(trie, key) do
     key_trie =
@@ -159,11 +157,12 @@ defmodule Trie do
     <<leading_nodes::bitstring-size(bit_offset), _skip_node::@node_bit_size>> =
       <<bits::bitstring-size(total_bits)>>
 
-    with_node = if bits == @leaf_node do
-      key_node
-    else
-      @both_branch_node
-    end
+    with_node =
+      if bits == @leaf_node do
+        key_node
+      else
+        @both_branch_node
+      end
 
     new_level =
       {ct,
@@ -213,7 +212,6 @@ defmodule Trie do
   def from_keys([head | tail] = input_key_list) when is_list(input_key_list) do
     do_from_keys(tail, Trie.from_key(head))
   end
-
 
   defp do_from_keys([head | tail], trie) do
     do_from_keys(tail, Trie.merge(trie, head))
